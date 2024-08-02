@@ -1,6 +1,27 @@
 import puppeteer from 'puppeteer';
 // import { getMongoClient } from './infra/mongoClient';
 
+function getNextBusinessDay(date: Date) {
+    const day = date.getDay();
+
+    if (day === 5) {
+        date.setDate(date.getDate() + 3);
+    } else if (day === 6) {
+        date.setDate(date.getDate() + 2);
+    } else {
+        date.setDate(date.getDate() + 1);
+    }
+
+    return date;
+}
+
+function formatDate(date: Date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
 export async function saveData(processosArray: any) {
     if(processosArray.length == 0){
         return;
@@ -411,6 +432,143 @@ export async function saveData(processosArray: any) {
         await page.click('#forum');
         await page.type("#forum", processo.valueForum, { delay : 120 });
         await page.click('#acao-salvar button');
+
+        /*
+            region
+        */
+
+        // Input para buscar processo
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        await page.waitForSelector('#mat-input-1');
+        await page.type('#mat-input-1', processo.valueProcessoNumber, { delay : 120 });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Achar na lista qual dos números de processo é tipo processo
+        await page.evaluate(() => {
+            Array.from(document.querySelectorAll('mat-option')).forEach((item) => {
+                const element = item.querySelector("span div span:nth-child(2)")
+                if(element && element.innerText.trim() === "Processo") {
+                    item.click()
+                }
+            });
+        })
+
+        // Abrir aba detalhes
+        await page.waitForSelector("#detalhe-entidade > div.content > div.center > div.content.ng-star-inserted > detalhe-entidade-content > div.detalhe-container.ng-star-inserted > tab-detalhe > div > mat-toolbar > button")
+        await page.evaluate(() => {
+            const element = document.querySelector("#detalhe-entidade > div.content > div.center > div.content.ng-star-inserted > detalhe-entidade-content > div.detalhe-container.ng-star-inserted > tab-detalhe > div > mat-toolbar > button")
+            element && element.click()
+        })
+
+        // Abrir Atividades abertas
+        await page.waitForSelector("#detalhe-entidade > div.content > fuse-sidebar > div > detalhe-left-sidebar > div > div > div > div > detalhe-left-sidebar-item:nth-child(8) > div > a")
+        await page.evaluate(() => {
+            const element = document.querySelector("#detalhe-entidade > div.content > fuse-sidebar > div > detalhe-left-sidebar > div > div > div > div > detalhe-left-sidebar-item:nth-child(8) > div > a")
+            element && element.click()
+        })
+
+        // Fechar overlay
+        await page.click("#detalhe-entidade > div.content > div.fuse-sidebar-overlay")
+
+        // Abrir Cadastro de Prazos
+        await page.waitForSelector("xpath//html/body/app/horizontal-layout-1/div/div/div/div/content/ng-component/div/div[3]/div[1]/div/detalhe-entidade-content/div/div/tab-relacionada/mat-toolbar/div/dj-button-list/div/button")
+        await page.evaluate(() => {
+            const element = document.evaluate("/html/body/app/horizontal-layout-1/div/div/div/div/content/ng-component/div/div[3]/div[1]/div/detalhe-entidade-content/div/div/tab-relacionada/mat-toolbar/div/dj-button-list/div/button", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+            element && element.click()
+
+            const buttonElement = document.querySelector("[id^=\"mat-menu-panel\"] > div button:nth-child(2)")
+            buttonElement && buttonElement.click()
+        })
+
+        // Start - Diego
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Remover nome existente
+        await page.waitForSelector("dj-campo-pesquisa > div > div > div > div > button")
+        await page.evaluate(() => {
+            const element = document.querySelector("dj-campo-pesquisa > div > div > div > div > button")
+            element && element.click()
+        })
+
+        // Add nome do Adv.Diego Sant
+        await page.waitForSelector("#proprietarionome")
+        await page.type("#proprietarionome", "Diego de Sant", { delay: 120 })
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await page.evaluate(() => {
+            const element = document.querySelector('[id^="mat-autocomplete"] mat-option')
+            element && element.click()
+        })
+
+        // Add assunto
+        await page.waitForSelector("#assunto")
+        await page.click("#assunto", { clickCount: 3 })
+        await page.type("#assunto", "Contestação / Cadastro", { delay: 120 })
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Add data
+        await page.waitForSelector("#data")
+        await page.click("#data", { clickCount: 3 })
+
+        const today = new Date();
+        const nextBusinessDay = getNextBusinessDay(today);
+        const formattedDate = formatDate(nextBusinessDay);
+
+        await page.type("#data", formattedDate, { delay: 120 })
+
+        // Salvar Prazo
+        await page.click('#acao-salvar button');
+        // End - Diego
+
+        // Abrir Cadastro de Prazos
+        await page.waitForSelector("xpath//html/body/app/horizontal-layout-1/div/div/div/div/content/ng-component/div/div[3]/div[1]/div/detalhe-entidade-content/div/div/tab-relacionada/mat-toolbar/div/dj-button-list/div/button")
+        await page.evaluate(() => {
+            const element = document.evaluate("/html/body/app/horizontal-layout-1/div/div/div/div/content/ng-component/div/div[3]/div[1]/div/detalhe-entidade-content/div/div/tab-relacionada/mat-toolbar/div/dj-button-list/div/button", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+            element && element.click()
+
+            const buttonElement = document.querySelector("[id^=\"mat-menu-panel\"] > div button:nth-child(2)")
+            buttonElement && buttonElement.click()
+        })
+
+        // Start - Marcus Paulo
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Remover nome existente
+        await page.waitForSelector("dj-campo-pesquisa > div > div > div > div > button")
+        await page.evaluate(() => {
+            const element = document.querySelector("dj-campo-pesquisa > div > div > div > div > button")
+            element && element.click()
+        })
+
+        // Add nome do Adv.Marcus Paulo
+        await page.waitForSelector("#proprietarionome")
+        await page.type("#proprietarionome", "Marcus Paulo Alves Bernardes", { delay: 120 })
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await page.evaluate(() => {
+            const element = document.querySelector('[id^="mat-autocomplete"] mat-option')
+            element && element.click()
+        })
+
+        // Add assunto
+        await page.waitForSelector("#assunto")
+        await page.click("#assunto", { clickCount: 3 })
+        await page.type("#assunto", "Cadastro Correto", { delay: 120 })
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Add data
+        await page.waitForSelector("#data")
+        await page.click("#data", { clickCount: 3 })
+        await page.type("#data", formattedDate, { delay: 120 })
+
+        // Salvar Prazo
+        await page.click('#acao-salvar button');
+        // End - Marcus Paulo
+
+        /*
+            endRegion
+        */
 
         // await page.type("#tipoFase", 'Conhecimento', { delay : 120 });
 
