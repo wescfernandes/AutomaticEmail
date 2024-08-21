@@ -29,7 +29,15 @@ export async function saveData(processosArray: any) {
     /**
      * Lunch the browser
      */
+
+    const advogados = ['Diego de Sant']
+    let indexController = 0
+
     for await (const processo of processosArray) {
+        if(indexController > advogados.length - 1) {
+            indexController = 0
+        }
+
         const browser = await puppeteer.launch(
             {
                 headless : false,
@@ -274,7 +282,7 @@ export async function saveData(processosArray: any) {
         // Navigate to next values tab
         if(processo.partes.Reqte.attorney) {
             await page.click('#advogadoClientenome');
-            await page.type("#advogadoClientenome", processo.partes.Reqte.attorney, { delay : 120 });
+            await page.type("#advogadoClientenome", advogados[indexController], { delay : 120 });
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             const advogadoClienteCount = await page.evaluate(() => {
@@ -494,7 +502,7 @@ export async function saveData(processosArray: any) {
 
         // Add nome do Adv.Diego Sant
         await page.waitForSelector("#proprietarionome")
-        await page.type("#proprietarionome", "Diego de Sant", { delay: 120 })
+        await page.type("#proprietarionome", advogados[indexController], { delay: 120 })
         await new Promise(resolve => setTimeout(resolve, 1000));
         await page.evaluate(() => {
             const element = document.querySelector('[id^="mat-autocomplete"] mat-option')
@@ -614,5 +622,6 @@ export async function saveData(processosArray: any) {
         //     console.log
         // }
         await browser.close();
+        indexController++
     }
 }
